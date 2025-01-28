@@ -144,6 +144,21 @@ def uniformCostSearch(problem):
     Search the node of least total cost first.
     """
     "*** YOUR CODE HERE ***"
+    pqueue = util.PriorityQueue()
+    pqueue.push((problem.getStartState(), []), problem.getCostOfActions([]))
+    visited = set()
+    while not pqueue.isEmpty():
+        currentState, path= pqueue.pop()
+        if problem.isGoalState(currentState):
+            return path
+        if currentState in visited:
+            continue
+        visited.add(currentState)
+        for successor in problem.getSuccessors(currentState):
+            if successor[0] not in visited:
+                newPath = path + [successor[1]]
+                pqueue.push((successor[0], newPath), problem.getCostOfActions(newPath))
+    
     util.raiseNotDefined()
 
 
