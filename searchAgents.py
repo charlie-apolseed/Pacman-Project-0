@@ -311,15 +311,23 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        # The game state keeps track of the position and the remaining corners that 
+        # have not been explored
+        # The start state needs to keep track of the initial position as well as the remaining corners
+        self.startState = (self.startingPosition, frozenset(self.corners))
 
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
         "*** YOUR CODE HERE ***"
+        return self.startState
         util.raiseNotDefined()
 
     def isGoalState(self, state):
         "Returns whether this search state is a goal state of the problem"
         "*** YOUR CODE HERE ***"
+        position, remainingCorners = state
+        #The goal is to have no corners remaining
+        return not remainingCorners
         util.raiseNotDefined()
 
     def getSuccessors(self, state):
@@ -333,18 +341,25 @@ class CornersProblem(search.SearchProblem):
          required to get there, and 'stepCost' is the incremental
          cost of expanding to that successor
         """
-
+        currentPosition, remainingCorners = state
         successors = []
+        
         for action in [Directions.EAST, Directions.WEST, Directions.NORTH, Directions.SOUTH]:
-            # Add a successor state to the successor list if the action is legal
-            # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
-
-            "*** YOUR CODE HERE ***"
-
+            #Get current x and y coords
+            x,y = currentPosition
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+            #Only valid move it does not result in a hitting a wall
+            if not hitsWall:
+                nextPosition = (nextx, nexty)
+                newRemainingCorners = remainingCorners
+                #Check if the next position is a corner. If so, then a move to that position
+                #should remove it from the remaining corners list
+                if nextPosition in remainingCorners:
+                    newRemainingCorners = remainingCorners - {nextPosition}
+                successors.append(((nextPosition, newRemainingCorners), action, 1))
+        
         self._expanded += 1
         return successors
 
@@ -381,11 +396,36 @@ def cornersHeuristic(state, problem):
     Do not run search or calculate exact maze distances (respecting
     walls) in your heuristic.
     """
-    corners = problem.corners  # These are the corner coordinates
-    walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+    currentPosition, remainingCorners = state
+    remainingCorners = list(remainingCorners)
+    
+    if not remainingCorners:
+        #If there are not corners left, the heuristic should be 0
+        return 0
+    
+    heuristic = 0
+    currentPosition = currentPosition
+    
+    while remainingCorners:
+        """
+        My idea is to calculate the manhatten distance to the nearest corner, then calculate the manhatten
+        distance to the next corner from there. Repeat this until no corners are remaining, and take the sum
+        of these results. This will create a heuristic that is lower bounded by the shortest path from the state 
+        to the goal. 
+        """
+        distances = []
+        for corner in remainingCorners:
+            distanceToCorner = util.manhattanDistance(currentPosition, corner)
+            #Keep track of the manhatten distance corresponding to each remaining corner
+            distances.append((distanceToCorner, corner))
+        minDist, closestCorner = min(distances)
+        heuristic += minDist
+        currentPosition = closestCorner
+        remainingCorners.remove(closestCorner)
+    
+    return heuristic
 
 
 class AStarCornersAgent(SearchAgent):

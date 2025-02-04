@@ -118,7 +118,6 @@ def breadthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     queue = util.Queue()
-    
     # Stack keeps track of possible states as well as path to reach them
     queue.push((problem.getStartState(), []))
     visited = set()
@@ -144,16 +143,27 @@ def uniformCostSearch(problem):
     Search the node of least total cost first.
     """
     "*** YOUR CODE HERE ***"
+    """
+    This is an implementation of UCS. It searches the nodes in order of 
+    increasing cost, where the cost is calculated using the built in 
+    getCostOfActions function.
+    """
     pqueue = util.PriorityQueue()
+    #Initialize pqueue
     pqueue.push((problem.getStartState(), []), problem.getCostOfActions([]))
+    #Keep track of visited locations
     visited = set()
+    #Continue until the goal is reached or the Pqueue is empty
     while not pqueue.isEmpty():
         currentState, path= pqueue.pop()
+        #Check for goal
         if problem.isGoalState(currentState):
             return path
+        #Check if it has been visited
         if currentState in visited:
             continue
         visited.add(currentState)
+        #Add all successors with their priority being the estimated cost.
         for successor in problem.getSuccessors(currentState):
             if successor[0] not in visited:
                 newPath = path + [successor[1]]
@@ -175,19 +185,30 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     Search the node that has the lowest combined cost and heuristic first.
     """
     "*** YOUR CODE HERE ***"
+    """
+    This is an implementation of the A* search algorithm. It uses a priority queue to manage the 
+    order to search nodes, and the priority is given by taking the sum of the number of steps leading 
+    to the current position with the heurisitic value for the next move.
+    """
     pqueue = util.PriorityQueue()
+    #Initialize the priority queue with the start state
     pqueue.push((problem.getStartState(), []), problem.getCostOfActions([]) + heuristic(problem.getStartState(), problem = problem))
+    #Keep track of the locations that have been visited
     visited = set()
+    #Continue until the goal is reached or the Pqueue is empty
     while not pqueue.isEmpty():
         currentState, path= pqueue.pop()
+        #Check for goal
         if problem.isGoalState(currentState):
             return path
+        #Check if visited
         if currentState in visited:
             continue
         visited.add(currentState)
         for successor in problem.getSuccessors(currentState):
             if successor[0] not in visited:
                 newPath = path + [successor[1]]
+                #Add the new location, the new path, and the estimated cost to the Pqeueue
                 pqueue.push((successor[0], newPath), problem.getCostOfActions(newPath) + heuristic(successor[0], problem = problem))
     
     util.raiseNotDefined()
